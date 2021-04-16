@@ -39,7 +39,6 @@ print( 'delete all the animals calling a lua script' )
 file_path = '/home/art/git/redis/delete_animals.lua'
 with open( file_path, 'r' ) as f:
     text = f.read()
-# string
 
 script_delete_animals = r.register_script( text )
 
@@ -49,11 +48,6 @@ pattern = 'animal:*'
 
 script_delete_animals ( keys= [ 0 ], args = [ REDIS_DB, cursor, pattern ] )
 
-pattern = "z_*"
-script_delete_animals ( keys= [ 0 ], args = [ REDIS_DB, cursor, pattern ] )
-
-pattern = "search*"
-script_delete_animals ( keys= [ 0 ], args = [ REDIS_DB, cursor, pattern ] )
 
 # -----------------------------------------------------------------------------
 
