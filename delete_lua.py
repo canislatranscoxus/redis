@@ -1,6 +1,5 @@
 '''
 Delete keys that match a pattern using lua scripting.
-
 Strategy: Search and destroy.
 '''
 
@@ -45,9 +44,11 @@ script_delete_animals = r.register_script( text )
 # parameters
 cursor = 0
 pattern = 'animal:*'
+db = script_delete_animals ( keys= [ 0 ], args = [ REDIS_DB, cursor, pattern ] )
 
-script_delete_animals ( keys= [ 0 ], args = [ REDIS_DB, cursor, pattern ] )
 
+pattern = 'search*'
+db = script_delete_animals ( keys= [ 0 ], args = [ REDIS_DB, cursor, pattern ] )
 
 # -----------------------------------------------------------------------------
 
