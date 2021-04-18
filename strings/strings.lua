@@ -15,5 +15,10 @@ print( result )
 result = string.gsub( key2, pattern, "")
 print( result )
 
+-- insert 3 k v to sorted set music.
+redis.call( 'ZADD', 'music', 3, 'guitar' )
+redis.call( 'ZADD', 'music', 1, 'flute' )
+redis.call( 'ZADD', 'music', 2, 'sax' )
+
 
 return result
