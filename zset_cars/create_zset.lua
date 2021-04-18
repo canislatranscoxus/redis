@@ -1,3 +1,9 @@
+--[[
+    take a sorted set of cars from src_key, 
+    and create a new sorted set of tunned cars in tar_key.
+    The tunned cars will have 100 kph more of speed
+]]
+
 local src_key, tar_key, db = KEYS[1], KEYS[2], tonumber( ARGV[1] )
 local cur, n, speed        = 0, 0, 0
 local car
@@ -22,7 +28,7 @@ repeat
         
         res = tonumber( i ) % 2
         if res == 0 then
-            speed = tonumber( v )
+            speed = tonumber( v ) + 100
             redis.call('ZADD', tar_key, speed, car  )
         else
             car = v
