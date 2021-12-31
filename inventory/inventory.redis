@@ -1,0 +1,13 @@
+# insert inventory Strategy 3.
+
+data
+
+Key name has the next pattern
+
+inv:dp:<cocedis_id>:product:<product_id>
+
+
+
+HSET inv:dp:cocedis_id:product:product_id
+total:1 5 available:1 3 reserved:1 1 allocated:1 
+

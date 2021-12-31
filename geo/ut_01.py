@@ -18,7 +18,7 @@ class Ut_cocedis:
 
         print( type( gps ) )
 
-        result = gps.find_stores( 
+        stores = gps.find_stores( 
           longitude   = '-100.38365162311239'
         , latitude    = '25.661906044204862'
         , top_n       =  10
@@ -26,11 +26,12 @@ class Ut_cocedis:
         , radius_unit = 'km' )
 
         
-        print( type( result ) )
-        print( result )
+        print( type( stores ) )
+        print( stores, '\n' )
+        
 
-        for i in result:
-            print( 'store: {}, {} km, lon: {}, lat: {}'.format( i[0], i[1], i[2][0], i[2][1] ) )
+        for i in stores:
+            print( i )
 
 
 

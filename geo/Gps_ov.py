@@ -40,7 +40,6 @@ class Gps_ov:
                     'REDIS_DB'    : os[ 'REDIS_DB'   ],
                     'REDIS_AUTH'  : os[ 'REDIS_AUTH' ],
                 }
-            
 
             self.conn = redis.StrictRedis(
                   host              = params[ 'REDIS_HOST' ]
@@ -54,6 +53,13 @@ class Gps_ov:
         except Exception as e:
             print( 'Redis connection is None' )
             raise
+
+    
+    def transform_geosearch_response( self, response):
+        a = [{"store": item[0], "distance": item[1], "location": {"latitude": item[1][1], "longitude": item[1][0]}} for item in response]
+        return a
+    
+
 
     def geosearch( self, key, longitude, latitude, top_n=10, radius = 200, radius_unit='km' ):
         '''Execute the geosearch redis command.        '''
@@ -79,7 +85,8 @@ class Gps_ov:
         The client coordinates are  lon_user, lat_user'''
         try:
             results = self.geosearch( self.STORES_KEY, longitude, latitude, top_n=10, radius = 200, radius_unit='km' )
-            return results
+            a = self.transform_geosearch_response( results )
+            return a
 
         except Exception as e:
             print( 'Gps_ov.find_stores(), error: {}'.format( e ) )
