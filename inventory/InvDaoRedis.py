@@ -16,7 +16,10 @@ del inv_cocedis:1 inv_cocedis:2 inv_cocedis:3 inv_cocedis:4 inv_cocedis:5 inv_co
 
 
 import os
+from typing import Mapping
 import redis
+
+from KeySchemaInv import KeySchemaInv
 
 
 num_of_cocedis  = 6
@@ -24,29 +27,37 @@ num_of_products = 31
 
 class InvDaoRedis:
 
-    def connect( self, params ):
-        try:
-            if params == None:
-                params = {
-                    'REDIS_HOST'  : os[ 'REDIS_HOST' ],
-                    'REDIS_PORT'  : os[ 'REDIS_PORT' ],
-                    'REDIS_DB'    : os[ 'REDIS_DB'   ],
-                    'REDIS_AUTH'  : os[ 'REDIS_AUTH' ],
-                }
+    keySchemaInv    = None
+    del_keys_lua    = None
+    REDIS_HOST      = None 
+    REDIS_PORT      = None
+    REDIS_DB        = None
+    REDIS_AUTH      = None
 
-            self.conn = redis.StrictRedis(
-                  host              = params[ 'REDIS_HOST' ]
-                , port              = params[ 'REDIS_PORT' ]
-                , db                = params[ 'REDIS_DB'   ]
-                , password          = params[ 'REDIS_AUTH' ]
-                , charset           = "utf-8"
-                , decode_responses  = True
+
+    def connect( self ):
+        try:
+            self.REDIS_HOST = os.environ[ 'REDIS_HOST' ]
+            self.REDIS_PORT = os.environ[ 'REDIS_PORT' ]
+            self.REDIS_DB   = os.environ[ 'REDIS_DB'   ]
+            self.REDIS_AUTH = os.environ[ 'REDIS_AUTH' ]
+
+            self.conn = redis.StrictRedis( 
+                 host             = self.REDIS_HOST
+                ,port             = self.REDIS_PORT
+                ,db               = self.REDIS_DB
+                ,password         = self.REDIS_AUTH
+                ,decode_responses = True
                 )
+
 
         except Exception as e:
             print( 'InvDaoBase.connect(), error: Redis connection is None' )
             raise
 
+    def create_pipeline( self ):
+        pipeline = self.conn.pipeline( transaction = False )
+        return pipeline
 
     def register_lua_script( self, file_name ):
         try:
@@ -72,7 +83,7 @@ class InvDaoRedis:
                 hi Hindi.
         '''
         try:
-            prefix = self.key_schema.get_prefix( self.language  )
+            prefix  = self.keySchemaInv.get_prefix( )
             # For all the etls, for all the languages use the line below
             #prefix = Key_schema.prefix
 
@@ -80,12 +91,20 @@ class InvDaoRedis:
             result  = self.del_keys_lua( keys= [ 0 ], args = [ self.REDIS_DB, pattern ] )
 
         except Exception as e:
-            print( 'Tf_idf_redis().clean_previous_etl, error: {}'.format( e ) )
+            print( 'InvDaoRedis().delete_keys, error: {}'.format( e ) )
             raise
 
 
     def del_inventory( self, cocedis_id = None ):
-        pass
+        try:
+            prefix  = self.keySchemaInv.get_prefix( cocedis_id )
+            pattern = '{}*'.format( prefix )
+            result  = self.del_keys_lua( keys= [ 0 ], args = [ self.REDIS_DB, pattern ] )
+
+        except Exception as e:
+            print( 'InvDaoRedis().del_inventory, error: {}'.format( e ) )
+            raise
+
 
 
 
@@ -103,65 +122,58 @@ class InvDaoRedis:
          '''
         pass
 
-    def mock_data_cocedis( self, pipe, cocedis_id = 1 ):
+    def mock_data_cocedis( self, pipeline, cocedis_id = 1 ):
         '''Initialize the inventory with mocked data, dummy data.'''
 
         try:
-            d = {
-                'cocedis_id' : 0,
-                'product_id' : 0,
+            mapping = {
                 'total'      : 5,
                 'available'  : 3,
                 'reserved'   : 1,
                 'allocated'  : 1,
                 }
 
-            s = '''HSET inv:dp:{cocedis_id}:product:{product_id} total {total} available {available} reserved {reserved} allocated {allocated}'''
+            #s = '''HSET inv:dp:{cocedis_id}:product:{product_id} total {total} available {available} reserved {reserved} allocated {allocated}'''
 
             for product_id in range( 1, num_of_products + 1 ):
-
-                d[ 'cocedis_id' ] = cocedis_id
-                d[ 'product_id' ] = product_id
-                cmd               = s.format( **d )
-                print( cmd )
-
-                # add command to pipe
-
+                key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )            
+                pipeline.hmset( key, mapping )
 
         except Exception as e:
             print( 'InvDaoBase.mock_data_cocedis(), error: {}'.format( e ) )
             raise
-
-
 
     def mock_data( self ):
         '''Insert mocked data, dummy data for 6 cocedis'''
         cocedis_id = 1
 
         try:
+            # create pipe
+            pipeline = self.create_pipeline()
 
-            for cocedis_id in range( 0, 7 ):
-                # create pipe
-                pipe = None
-
-                self.mock_data_cocedis( pipe, cocedis_id )
+            for cocedis_id in range( 1, num_of_cocedis + 1 ):
+                self.mock_data_cocedis( pipeline, cocedis_id )
 
                 #execute batch
-                pipe.execute_batch()
+                pipeline.execute()
 
         except Exception as e:
             print( 'InvDaoBase.mock_data(), error: {}'.format( e ) )
             raise
 
-    def __init__(self, params ) -> None:
-        self.lua_dir    = params[ 'lua_dir' ]
-        self.key_schema = Key_schema()
+    def __init__(self, params=None ) -> None:
+        self.lua_dir      = '/home/art/git/redis/inventory/lua'
+        self.keySchemaInv = KeySchemaInv()
 
-        self.connect( params )
+        self.connect( )
 
         # register lua scripts
         self.del_keys_lua = self.register_lua_script( 'del_keys.lua' )
-        self.count_df_lua = self.register_lua_script( 'count_df.lua' )
+        
+        '''self.count_df_lua = self.register_lua_script( 'reserve.lua' )
+        self.count_df_lua = self.register_lua_script( 'commit_sale.lua' )
+        self.count_df_lua = self.register_lua_script( 'take_back_reserved.lua' )
+        '''
 
 
 

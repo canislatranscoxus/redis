@@ -1,4 +1,4 @@
-DEFAULT_KEY_PREFIX = 'search_box'
+DEFAULT_KEY_PREFIX = 'inv'
 
 def prefixed_key(f):
     """
@@ -24,22 +24,17 @@ class KeySchemaInv:
         self.prefix = prefix
 
     @prefixed_key
-    def get_tf_key(self, language, token = '' ):
-        key = f'{language}:tf:{token}'
-        return key
-
-    @prefixed_key
-    def get_df_key(self, language ):
-        key = f'{language}:df'
+    def get_inventory_key(self, cocedis_id, product_id ):
+        key = f'dp:{cocedis_id}:product:{product_id}'
         return key      
 
-    @prefixed_key
-    def get_tf_idf_key(self, language, token = '' ):
-        key = f'{language}:tf_idf:{token}'
-        return key
 
     @prefixed_key
-    def get_prefix(self, language ):
-        key = f'{language}'
+    def get_prefix(self, cocedis_id ):
+        
+        key = ''
+        if cocedis_id != None:
+            key = f'{cocedis_id}'
+
         return key        
 
