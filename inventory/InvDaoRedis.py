@@ -29,6 +29,8 @@ class InvDaoRedis:
 
     keySchemaInv    = None
     del_keys_lua    = None
+    reserve_lua     = None
+
     REDIS_HOST      = None 
     REDIS_PORT      = None
     REDIS_DB        = None
@@ -55,8 +57,8 @@ class InvDaoRedis:
             print( 'InvDaoBase.connect(), error: Redis connection is None' )
             raise
 
-    def create_pipeline( self ):
-        pipeline = self.conn.pipeline( transaction = False )
+    def create_pipeline( self, transaction = False ):
+        pipeline = self.conn.pipeline( transaction )
         return pipeline
 
     def register_lua_script( self, file_name ):
@@ -70,7 +72,6 @@ class InvDaoRedis:
         except Exception as e:
             print( 'Tf_idf_dao_redis.register_lua_script(), error: {}'.format( e ) )
             raise
-
 
     def delete_keys( self, prefix ):
         '''In redis, delete all the keys related to the previous etl proces of an specific language.
@@ -94,7 +95,6 @@ class InvDaoRedis:
             print( 'InvDaoRedis().delete_keys, error: {}'.format( e ) )
             raise
 
-
     def del_inventory( self, cocedis_id = None ):
         try:
             prefix  = self.keySchemaInv.get_prefix( cocedis_id )
@@ -106,12 +106,28 @@ class InvDaoRedis:
             raise
 
 
+    def reserve( self, cocedis_id, product_id, quantity ):
+        try:
+            '''# create pipe
+            pipeline = self.create_pipeline( transaction = True )
+            key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            mapping = pipeline.hgetall( key )
+            if  mapping[ 'available' ] >= quantity:
+                mapping[ 'available' ] = mapping[ 'available' ] - quantity
+                mapping[ 'reserved'  ] = mapping[ 'reserved'  ] + quantity
+                pipeline.hmset(key, mapping )
+            pipeline.execute()
+            '''
+            key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            result  = self.reserve_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
 
 
-    def reserve_item( self, cocedis, product_id, quantity ):
-        pass
+        except Exception as e:
+            print( 'InvDaoBase.reserve(), error: {}'.format( e ) )
+            raise
 
-    def take_back_item( self, cocedis, product_id, quantity ):
+
+    def take_back( self, cocedis_id, product_id, quantity ):
         pass
 
     def add_update_cocedis( self, cocedis_id, product_inv_list ):
@@ -169,8 +185,9 @@ class InvDaoRedis:
 
         # register lua scripts
         self.del_keys_lua = self.register_lua_script( 'del_keys.lua' )
-        
-        '''self.count_df_lua = self.register_lua_script( 'reserve.lua' )
+        self.reserve_lua = self.register_lua_script( 'reserve.lua' )
+
+        '''
         self.count_df_lua = self.register_lua_script( 'commit_sale.lua' )
         self.count_df_lua = self.register_lua_script( 'take_back_reserved.lua' )
         '''

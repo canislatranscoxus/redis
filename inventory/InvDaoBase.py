@@ -25,13 +25,13 @@ class InvDaoBase( abc.ABC ):
 
 
     @abc.abstractmethod
-    def reserve_item( self, cocedis_id, product_id, quantity ):
+    def reserve( self, cocedis_id, product_id, quantity ):
         '''Take a quantity of products from available and put them in reserved,
         in he inventory'''
         pass
 
     @abc.abstractmethod
-    def take_back_item( self, cocedis_idis, product_id, quantity ):
+    def take_back( self, cocedis_id, product_id, quantity ):
         pass
 
 

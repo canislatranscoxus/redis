@@ -34,7 +34,7 @@ class KeySchemaInv:
         
         key = ''
         if cocedis_id != None:
-            key = f'{cocedis_id}'
+            key = f'dp:{cocedis_id}:'
 
         return key        
 
