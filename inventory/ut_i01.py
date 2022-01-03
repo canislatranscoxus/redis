@@ -60,6 +60,11 @@ class Ut_i01:
 
     def t_05( self ):
         '''Take back 1 items '''
+        cocedis_id = 1
+        product_id = 3
+        quantity   = 1
+        inv_Redis = InvDaoRedis()
+        inv_Redis.take_back( cocedis_id, product_id, quantity )
 
 
 
@@ -108,7 +113,7 @@ if __name__ == '__main__':
     ut = Ut_i01()
     
     #ut.t_01()
-    ut.t_04()
+    ut.t_05()
 
     print( '\n End Unit Test.' )
 

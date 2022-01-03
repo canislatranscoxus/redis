@@ -30,6 +30,7 @@ class InvDaoRedis:
     keySchemaInv    = None
     del_keys_lua    = None
     reserve_lua     = None
+    take_back_lua   = None
 
     REDIS_HOST      = None 
     REDIS_PORT      = None
@@ -108,27 +109,21 @@ class InvDaoRedis:
 
     def reserve( self, cocedis_id, product_id, quantity ):
         try:
-            '''# create pipe
-            pipeline = self.create_pipeline( transaction = True )
-            key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
-            mapping = pipeline.hgetall( key )
-            if  mapping[ 'available' ] >= quantity:
-                mapping[ 'available' ] = mapping[ 'available' ] - quantity
-                mapping[ 'reserved'  ] = mapping[ 'reserved'  ] + quantity
-                pipeline.hmset(key, mapping )
-            pipeline.execute()
-            '''
             key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
             result  = self.reserve_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
-
-
         except Exception as e:
             print( 'InvDaoBase.reserve(), error: {}'.format( e ) )
             raise
 
 
     def take_back( self, cocedis_id, product_id, quantity ):
-        pass
+        try:
+            key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            result  = self.take_back_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
+        except Exception as e:
+            print( 'InvDaoBase.take_back(), error: {}'.format( e ) )
+            raise
+
 
     def add_update_cocedis( self, cocedis_id, product_inv_list ):
         '''Add or update the inventory of One cocedis. This method must be called when a
@@ -184,8 +179,9 @@ class InvDaoRedis:
         self.connect( )
 
         # register lua scripts
-        self.del_keys_lua = self.register_lua_script( 'del_keys.lua' )
-        self.reserve_lua = self.register_lua_script( 'reserve.lua' )
+        self.del_keys_lua   = self.register_lua_script( 'del_keys.lua' )
+        self.reserve_lua    = self.register_lua_script( 'reserve.lua' )
+        self.take_back_lua  = self.register_lua_script( 'take_back.lua' )
 
         '''
         self.count_df_lua = self.register_lua_script( 'commit_sale.lua' )
