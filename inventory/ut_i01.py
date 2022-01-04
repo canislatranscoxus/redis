@@ -128,6 +128,29 @@ class Ut_i01:
         inv_Redis.reserve    ( cocedis_id, product_id, quantity )
         inv_Redis.commit_sale( cocedis_id, product_id, quantity )
 
+    def t_09( self ):
+        '''Commit sale of all the items in the shopping cart. It means:
+
+        * take 2 items of the same product_id and put them in my cart. 
+        * take 1 items with different product_id and put them in my cart. 
+        * pay
+        * commit sale
+
+        # redis commands
+        hgetall inv:dp:1:product:3
+        hgetall inv:dp:1:product:5
+        '''
+
+        cocedis_id=1
+        inv_Redis = InvDaoRedis()
+        inv_Redis.reserve    ( cocedis_id, product_id=3, quantity=3 )
+        inv_Redis.reserve    ( cocedis_id, product_id=5, quantity=1 )
+        cart_items= [
+            { 'cocedis_id': cocedis_id, 'product_id': 3, 'quantity': 3 },
+            { 'cocedis_id': cocedis_id, 'product_id': 5, 'quantity': 1 },
+        ]
+        inv_Redis.commit_cart_sale( cart_items )
+
 
 
 if __name__ == '__main__':
@@ -135,7 +158,7 @@ if __name__ == '__main__':
     ut = Ut_i01()
     
     ut.t_01()
-    ut.t_08()
+    ut.t_09()
 
     print( '\n End Unit Test.' )
 

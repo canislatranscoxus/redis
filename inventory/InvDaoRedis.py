@@ -31,6 +31,8 @@ class InvDaoRedis:
     del_keys_lua         = None
     reserve_lua          = None
     take_back_lua        = None
+    commit_sale_lua      = None
+    commit_cart_sale_lua = None
     add_available_lua    = None
     update_available_lua = None
 
@@ -135,6 +137,25 @@ class InvDaoRedis:
             print( 'InvDaoBase.take_back(), error: {}'.format( e ) )
             raise
 
+    def commit_cart_sale( self, cart_items ):
+        try:
+            #key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            #result = self.commit_sale_lua( keys = [0], args = [ self.REDIS_DB, cart_items ] )
+            pipeline = self.create_pipeline( transaction = True )
+            pipeline.multi()
+
+            for d in cart_items:
+
+                key = self.keySchemaInv.get_inventory_key( d[ 'cocedis_id' ], d[ 'product_id' ] )
+                pipeline.hincrby( key, 'reserved', - d[ 'quantity' ] )
+                pipeline.hincrby( key, 'total'   , - d[ 'quantity' ] )
+            
+            pipeline.execute()
+
+        except Exception as e:
+            print( 'InvDaoBase.take_back(), error: {}'.format( e ) )
+            raise
+
 
 
     def add_available( self, cocedis_id, product_id, quantity ):
@@ -158,8 +179,6 @@ class InvDaoRedis:
         except Exception as e:
             print( 'InvDaoBase.add_available(), error: {}'.format( e ) )
             raise
-
-
 
 
     def mock_data_cocedis( self, pipeline, cocedis_id = 1 ):
@@ -211,9 +230,8 @@ class InvDaoRedis:
         self.del_keys_lua         = self.register_lua_script( 'del_keys.lua' )
         self.reserve_lua          = self.register_lua_script( 'reserve.lua' )
         self.take_back_lua        = self.register_lua_script( 'take_back.lua' )
-
-        self.commit_sale_lua        = self.register_lua_script( 'commit_sale.lua' )
-
+        self.commit_sale_lua      = self.register_lua_script( 'commit_sale.lua' )
+        #self.commit_cart_sale_lua = self.register_lua_script( 'commit_cart_sale.lua' )
         self.add_available_lua    = self.register_lua_script( 'add_available.lua'    )
         self.update_available_lua = self.register_lua_script( 'update_available.lua' )
 
