@@ -27,10 +27,12 @@ num_of_products = 31
 
 class InvDaoRedis:
 
-    keySchemaInv    = None
-    del_keys_lua    = None
-    reserve_lua     = None
-    take_back_lua   = None
+    keySchemaInv         = None
+    del_keys_lua         = None
+    reserve_lua          = None
+    take_back_lua        = None
+    add_available_lua    = None
+    update_available_lua = None
 
     REDIS_HOST      = None 
     REDIS_PORT      = None
@@ -109,8 +111,8 @@ class InvDaoRedis:
 
     def reserve( self, cocedis_id, product_id, quantity ):
         try:
-            key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
-            result  = self.reserve_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
+            key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            result = self.reserve_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
         except Exception as e:
             print( 'InvDaoBase.reserve(), error: {}'.format( e ) )
             raise
@@ -118,20 +120,47 @@ class InvDaoRedis:
 
     def take_back( self, cocedis_id, product_id, quantity ):
         try:
-            key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
-            result  = self.take_back_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
+            key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            result = self.take_back_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
         except Exception as e:
             print( 'InvDaoBase.take_back(), error: {}'.format( e ) )
             raise
 
 
-    def add_update_cocedis( self, cocedis_id, product_inv_list ):
-        '''Add or update the inventory of One cocedis. This method must be called when a
-        Distribution Point is starting, or need to update their real inventory.
+    def commit_sale( self, cocedis_id, product_id, quantity ):
+        try:
+            key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            result = self.commit_sale_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
+        except Exception as e:
+            print( 'InvDaoBase.take_back(), error: {}'.format( e ) )
+            raise
+
+
+
+    def add_available( self, cocedis_id, product_id, quantity ):
+        '''Add items in One cocedis. This method must be called when a
+        Distribution Point receive products.
 
         cocedis_id : int. 
          '''
-        pass
+        try:
+            key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            result = self.add_available_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
+        except Exception as e:
+            print( 'InvDaoBase.add_available(), error: {}'.format( e ) )
+            raise
+
+
+    def update_available( self, cocedis_id, product_id, quantity ):
+        try:
+            key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )
+            result = self.update_available_lua( keys = [key], args = [ self.REDIS_DB, quantity ] )
+        except Exception as e:
+            print( 'InvDaoBase.add_available(), error: {}'.format( e ) )
+            raise
+
+
+
 
     def mock_data_cocedis( self, pipeline, cocedis_id = 1 ):
         '''Initialize the inventory with mocked data, dummy data.'''
@@ -179,14 +208,15 @@ class InvDaoRedis:
         self.connect( )
 
         # register lua scripts
-        self.del_keys_lua   = self.register_lua_script( 'del_keys.lua' )
-        self.reserve_lua    = self.register_lua_script( 'reserve.lua' )
-        self.take_back_lua  = self.register_lua_script( 'take_back.lua' )
+        self.del_keys_lua         = self.register_lua_script( 'del_keys.lua' )
+        self.reserve_lua          = self.register_lua_script( 'reserve.lua' )
+        self.take_back_lua        = self.register_lua_script( 'take_back.lua' )
 
-        '''
-        self.count_df_lua = self.register_lua_script( 'commit_sale.lua' )
-        self.count_df_lua = self.register_lua_script( 'take_back_reserved.lua' )
-        '''
+        self.commit_sale_lua        = self.register_lua_script( 'commit_sale.lua' )
+
+        self.add_available_lua    = self.register_lua_script( 'add_available.lua'    )
+        self.update_available_lua = self.register_lua_script( 'update_available.lua' )
+
 
 
 

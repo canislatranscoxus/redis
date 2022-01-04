@@ -4,6 +4,8 @@ Description: This class is used to Connect to Redis an execute the operations
 
             We use the word "cocedis" to refer a "Distribution Point", sometime "dp".
 
+
+
 '''
 
 import os
@@ -34,15 +36,32 @@ class InvDaoBase( abc.ABC ):
     def take_back( self, cocedis_id, product_id, quantity ):
         pass
 
+    @abc.abstractmethod
+    def commit_sale( self, cocedis_id, product_id, quantity ):
+        pass
+
 
     @abc.abstractmethod
-    def add_update_cocedis( self, cocedis_id, product_inv_list ):
-        '''Add or update the inventory of One cocedis. This method must be called when a
-        Distribution Point is starting, or need to update their real inventory.
+    def add_available( self, cocedis_id, product_id, quantity ):
+        '''Add items in One cocedis. This method must be called when a
+        Distribution Point receive products.
 
         cocedis_id : int. 
          '''
         pass
+
+
+    @abc.abstractmethod
+    def update_available( self, cocedis_id, product_id, quantity ):
+        '''Update items to the inventory of One cocedis. This method must be called when a
+        Distribution Point is starting, or need to update their real inventory. 
+        For example, every week update the real data.
+
+        cocedis_id : int. 
+         '''
+        pass
+
+
 
     @abc.abstractmethod
     def mock_data( self  ):

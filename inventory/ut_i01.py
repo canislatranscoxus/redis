@@ -86,8 +86,17 @@ class Ut_i01:
         total    : 5 items
         available: 3 - 2 = 1 items
         reserved : 1 + 2 = 3 item
-        allocated: 1 item           '''
-        pass
+        allocated: 1 item           
+        
+        #Redis command
+        hgetall inv:dp:1:product:3
+        '''
+        cocedis_id = 1
+        product_id = 3
+        quantity   = 2
+        inv_Redis = InvDaoRedis()
+        inv_Redis.reserve( cocedis_id, product_id, quantity )
+
 
     def t_07( self ):
         '''Reserve 3 items, and take back 2. It means:
@@ -95,25 +104,38 @@ class Ut_i01:
         * take 3 items and put them in my cart. 
         * take back 2 to the shelf, and my cart must have 1.
         And I continue shopping. I not paying now... '''
-        pass
+        cocedis_id = 1
+        product_id = 3
+        reserve_quantity   = 3
+        take_back_quantity = 2
+        inv_Redis = InvDaoRedis()
+        inv_Redis.reserve  ( cocedis_id, product_id, reserve_quantity )
+        inv_Redis.take_back( cocedis_id, product_id, take_back_quantity )
+
 
     def t_08( self ):
         '''Reserve 2 items, and pay. It means:
 
         * take 2 items and put them in my cart. 
         * pay
-        * 
+        * commit sale
 
         And I continue shopping. I not paying now...'''
-        pass
+        cocedis_id = 1
+        product_id = 3
+        quantity   = 3
+        inv_Redis = InvDaoRedis()
+        inv_Redis.reserve    ( cocedis_id, product_id, quantity )
+        inv_Redis.commit_sale( cocedis_id, product_id, quantity )
+
 
 
 if __name__ == '__main__':
     print( '\n Begin Unit Test.' )
     ut = Ut_i01()
     
-    #ut.t_01()
-    ut.t_05()
+    ut.t_01()
+    ut.t_08()
 
     print( '\n End Unit Test.' )
 
