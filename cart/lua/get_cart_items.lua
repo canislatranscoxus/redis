@@ -7,23 +7,20 @@ description:    this script execute 2 steps.
 local key, db  = KEYS[1], tonumber( ARGV[1] ) 
 
 
-local result = { }
-
-
 -- get product_id and quantity 
-local product_qty = {}
+local product_qty   = {}
+local products      = {}
+local product_ids   = {}
+local ids           = ""
+
 redis.call( "select", db )
 product_qty = redis.call( 'HGETALL', key )
 
 
-local products = {}
-local product_ids = {}
-local ids = ""
-
+-- convert product_ids list to string
 redis.call( "select", db )
 product_ids = redis.call( 'HKEYS', key )
 
--- convert product_ids list to string
 for index, value in pairs( product_ids ) do
    print( value )
 
@@ -33,12 +30,10 @@ for index, value in pairs( product_ids ) do
    ids = ids  .. "@id:" .. value
 end
 
+-- get products
 products =  redis.call( 'FT.SEARCH', 'es_product_idx', ids )
 
-result = {
-    [ "product_qty"] = product_qty,
-    [ "products"   ] = products
-}
+-- pack results in an array
+local result = { product_qty, products}
 
-
-return 'result'
+return result
