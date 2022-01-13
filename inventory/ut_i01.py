@@ -12,7 +12,6 @@ class Ut_i01:
         inv_Redis = InvDaoRedis()
         inv_Redis.mock_data()
 
-
     def t_02( self ):
         ''' delete the inventory of cocedis_id 1
         See the results in redis insight and see the keys. use the next command:
@@ -57,7 +56,6 @@ class Ut_i01:
         inv_Redis = InvDaoRedis()
         inv_Redis.reserve( cocedis_id, product_id, quantity )
 
-
     def t_05( self ):
         '''Take back 1 items '''
         cocedis_id = 1
@@ -65,9 +63,6 @@ class Ut_i01:
         quantity   = 1
         inv_Redis = InvDaoRedis()
         inv_Redis.take_back( cocedis_id, product_id, quantity )
-
-
-
 
     def t_06( self ):
         '''Reserve 2 items, it means:
@@ -97,7 +92,6 @@ class Ut_i01:
         inv_Redis = InvDaoRedis()
         inv_Redis.reserve( cocedis_id, product_id, quantity )
 
-
     def t_07( self ):
         '''Reserve 3 items, and take back 2. It means:
 
@@ -111,7 +105,6 @@ class Ut_i01:
         inv_Redis = InvDaoRedis()
         inv_Redis.reserve  ( cocedis_id, product_id, reserve_quantity )
         inv_Redis.take_back( cocedis_id, product_id, take_back_quantity )
-
 
     def t_08( self ):
         '''Reserve 2 items, and pay. It means:
