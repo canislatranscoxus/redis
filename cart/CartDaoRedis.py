@@ -16,7 +16,7 @@ del inv_cocedis:1 inv_cocedis:2 inv_cocedis:3 inv_cocedis:4 inv_cocedis:5 inv_co
 
 
 import os
-from typing import Mapping
+from typing import ItemsView, Mapping
 import redis
 
 from DaoRedis       import DaoRedis
@@ -26,12 +26,13 @@ from KeySchemaCart  import KeySchemaCart
 num_of_cocedis  = 6
 num_of_products = 31
 
-class Cart( DaoRedis ):
+class CartDaoRedis ( DaoRedis ):
 
+    ItemsView              = None
     keySchemaCart          = None
     del_keys_lua           = None
     get_cart_items_lua     = None    
-    get_cart_items_qty_lua = None
+    get_cart_product_qty_lua = None
     get_cart_products_lua  = None
 
     REDIS_HOST      = None 
@@ -41,9 +42,9 @@ class Cart( DaoRedis ):
 
 
 
-    def format_redis_items( self, row_list ):
+    def format_cart_items( self, row_list ):
         '''Format the cart items,
-        input : result from redis. Row list.
+        input : result from redis. Row list with product_id and quantity.
         output: dictionary of dictionary'''
         try:
             #
@@ -52,12 +53,13 @@ class Cart( DaoRedis ):
                 item = { 
                     'quantity' : row_list[ i + 1 ]
                  }
-                d[ row_list[ i ] ] = item
+                product_id = row_list[ i ]
+                d[ product_id ] = item
             
             return d
 
         except Exception as e:
-            print( 'Cart.product_qty_2_dic(), error: {}'.format( e ) )
+            print( 'CartDaoRedis.product_qty_2_dic(), error: {}'.format( e ) )
             raise
 
 
@@ -71,12 +73,14 @@ class Cart( DaoRedis ):
             return d
 
         except Exception as e:
-            print( 'Cart.product_qty_2_dic(), error: {}'.format( e ) )
+            print( 'CartDaoRedis.product_qty_2_dic(), error: {}'.format( e ) )
             raise
 
-    def found_products_2_list( self, row_list ):
+    def format_found_products( self, row_list ):
         '''Take as input the found products from redis and 
-        return as output the products data as a list of dictionaries'''
+        return as output the products data as a dictionary, where 
+                key   is product_id, and
+                value is a dictionary with product data'''
 
         try:
             d = {}
@@ -91,7 +95,7 @@ class Cart( DaoRedis ):
             return d
 
         except Exception as e:
-            print( 'Cart.product_qty_2_dic(), error: {}'.format( e ) )
+            print( 'CartDaoRedis.product_qty_2_dic(), error: {}'.format( e ) )
             raise
 
     def get_cart_items( self, client_id  ):
@@ -101,34 +105,35 @@ class Cart( DaoRedis ):
             result = self.get_cart_items_lua( keys = [key], args = [ self.REDIS_DB ] )
             #print( result )
 
-            items        = self.list_2_dic( result[ 0 ] )
-            dod_products = self.found_products_2_dics( result[ 1 ] )
+            items        = self.format_cart_items( result[ 0 ] )
+            found_products = self.format_found_products( result[ 1 ] )
 
             # todo: Add product to items
             '''
-            products = self.dod_products_2_objs( dod_products )
-            for k, v in items.items():
-                v[ 'product' ] = products[ k ]
+            for product_id, item in items.items():
+                product = self.doc_2_product( found_products[ product_id ] )
+                item[ 'product' ] = product
             '''
 
             print( '..\n' )
             
         except Exception as e:
-            print( 'Cart.get_items_qty(), error: {}'.format( e ) )
+            print( 'CartDaoRedis.get_items_qty(), error: {}'.format( e ) )
             raise
 
-    def get_cart_items_qty( self, client_id  ):
+    def get_product_qty( self, client_id  ):
         ''' Used for Unit Testing.
             Get product_id and qty, for all the cart items.
         '''
         try:
             '''key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )'''
             key = 'cart:client:{}' .format( client_id )
-            result = self.get_cart_items_qty_lua( keys = [key], args = [ self.REDIS_DB ] )
-            print( result )
+            result = self.get_cart_product_qty_lua( keys = [key], args = [ self.REDIS_DB ] )
+            #print( result )
+            return result
             
         except Exception as e:
-            print( 'Cart.get_items_qty(), error: {}'.format( e ) )
+            print( 'CartDaoRedis.get_items_qty(), error: {}'.format( e ) )
             raise
 
     def get_cart_products( self, client_id  ):
@@ -139,68 +144,80 @@ class Cart( DaoRedis ):
             '''key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )'''
             key = 'cart:client:{}' .format( client_id )
             result = self.get_cart_products_lua( keys = [key], args = [ self.REDIS_DB ] )
-            print( result )
-            print( '...' )
+            return result
             
         except Exception as e:
-            print( 'Cart.get_items_qty(), error: {}'.format( e ) )
+            print( 'CartDaoRedis.get_items_qty(), error: {}'.format( e ) )
             raise
-
-
 
     def __len__(self):
         """
         Count all items in the cart.
         """
-        return sum(item['quantity'] for item in self.cart.values())
+        return sum(item['quantity'] for item in self.items.values())
 
-    def add(self, product, quantity=1, override_quantity=False, cocedis_id = 0 ):
+    def add(self, client_id, product_id, quantity=1, override_quantity=False ):
         """
         Add a product to the cart or update its quantity.
         """
-        product_id = str(product.id)
-        if product_id not in self.cart:
-            self.cart[product_id] = {
-                'cocedis_id': cocedis_id,
-                'quantity'  : 0,
-                'price'     : str(product.price),
+        try:
+            key = self.keySchemaCart.get_cart_key( client_id )
 
-                'width'         : product.width ,
-                'height'        : product.height ,
-                'length'        : product.length ,
-                'weight'        : product.weight ,
-                'mass_unit'     : product.mass_unit ,
-                'distance_unit' : product.distance_unit ,
-            }
+            if override_quantity:
+                self.conn.hset   ( key, product_id, quantity )
+            else:
+                self.conn.hincrby( key, product_id, quantity )
 
-        if override_quantity:
-            #todo: inventory reserve or take back items
-            self.cart[product_id]['quantity'] = quantity
+        except Exception as e:
+            print( 'CartDaoRedis.add(), error: {}'.format( e ) )
+            raise        
+
+    def remove(self, client_id, product_id ):
+        """
+        Add a product to the cart or update its quantity.
+        """
+        try:
             
-        else:
-            self.cart[product_id]['quantity'] += quantity
-            #todo: inventory reserve item
+            key = self.keySchemaCart.get_cart_key( client_id )
+            self.conn.hdel( key, product_id )
 
-        self.save()
-        
+        except Exception as e:
+            print( 'CartDaoRedis.add(), error: {}'.format( e ) )
+            raise        
+
+    def clear(self, client_id ):
+        # remove all items in cart, and cart from session.
+        try:
+            key = self.keySchemaCart.get_cart_key( client_id )
+            self.conn.delete( key )
+            self.items.clear()
+
+        except Exception as e:
+            print( 'CartDaoRedis.clear(), error: {}'.format( e ) )
+            raise
+
 
 
     def __init__(self, params=None ) -> None:
-        self.lua_dir      = '/home/art/git/redis/cart/lua'
-        self.keySchemaCart = KeySchemaCart()
+        try:
+            self.lua_dir      = '/home/art/git/redis/cart/lua'
+            self.keySchemaCart = KeySchemaCart()
 
-        self.connect( )
+            self.connect( )
 
-        # register lua scripts
-        self.del_keys_lua      = self.register_lua_script( 'del_keys.lua' )
-        
-        self.get_cart_items_lua     = self.register_lua_script( 'get_cart_items.lua' )
-        self.get_cart_items_qty_lua = self.register_lua_script( 'get_cart_items_qty.lua' )
-        self.get_cart_products_lua  = self.register_lua_script( 'get_cart_products.lua' )
+            # register lua scripts
+            self.del_keys_lua      = self.register_lua_script( 'del_keys.lua' )
+            
+            self.get_cart_items_lua       = self.register_lua_script( 'get_cart_items.lua' )
+            self.get_cart_product_qty_lua = self.register_lua_script( 'get_cart_product_qty.lua' )
+            self.get_cart_products_lua    = self.register_lua_script( 'get_cart_products.lua' )
 
-        self.cart = {}
-        # self.cart = get cart items from redis
+            self.items = {}
+            # self.cart = get cart items from redis
 
+        except Exception as e:
+            print( 'CartDaoRedis.__init__(), error: {}'.format( e ) )
+            raise        
 
 
 
