@@ -57,6 +57,6 @@ class Ut_01:
 if __name__ == '__main__':
     print( '\n Begin Unit Test.' )
     ut = Ut_01()
-    ut.t_07()
+    ut.t_03()
 
     print( '\n End Unit Test.' )

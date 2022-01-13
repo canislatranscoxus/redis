@@ -28,6 +28,7 @@ num_of_products = 31
 
 class CartDaoRedis ( DaoRedis ):
 
+    cart                   = None
     ItemsView              = None
     keySchemaCart          = None
     del_keys_lua           = None
@@ -61,7 +62,6 @@ class CartDaoRedis ( DaoRedis ):
         except Exception as e:
             print( 'CartDaoRedis.product_qty_2_dic(), error: {}'.format( e ) )
             raise
-
 
     def list_2_dic( self, row_list ):
         '''Convert list to dictionary'''
@@ -99,24 +99,24 @@ class CartDaoRedis ( DaoRedis ):
             raise
 
     def get_cart_items( self, client_id  ):
+        '''get the cart items from redis, brings product_id and quantity for each item.'''
         try:
-            '''key    = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )'''
             key = 'cart:client:{}' .format( client_id )
             result = self.get_cart_items_lua( keys = [key], args = [ self.REDIS_DB ] )
-            #print( result )
 
-            items        = self.format_cart_items( result[ 0 ] )
-            found_products = self.format_found_products( result[ 1 ] )
+            if  result      == None or len( result ) == 0 or    \
+                result[ 0 ] == None or len( result[ 0 ] ) == 0 :
+                self.cart = {}
+                return self.cart
 
-            # todo: Add product to items
-            '''
-            for product_id, item in items.items():
-                product = self.doc_2_product( found_products[ product_id ] )
-                item[ 'product' ] = product
-            '''
+            self.cart = self.format_cart_items( result[ 0 ] )
+            products  = self.format_found_products( result[ 1 ] )
 
-            print( '..\n' )
+            for product_id, item in self.cart.items():
+                item[ 'product' ] = products[ product_id ]
             
+            return self.cart
+
         except Exception as e:
             print( 'CartDaoRedis.get_items_qty(), error: {}'.format( e ) )
             raise
@@ -154,7 +154,7 @@ class CartDaoRedis ( DaoRedis ):
         """
         Count all items in the cart.
         """
-        return sum(item['quantity'] for item in self.items.values())
+        return sum( item['quantity'] for item in self.cart.values() )
 
     def add(self, client_id, product_id, quantity=1, override_quantity=False ):
         """
@@ -212,7 +212,7 @@ class CartDaoRedis ( DaoRedis ):
             self.get_cart_product_qty_lua = self.register_lua_script( 'get_cart_product_qty.lua' )
             self.get_cart_products_lua    = self.register_lua_script( 'get_cart_products.lua' )
 
-            self.items = {}
+            self.cart = {}
             # self.cart = get cart items from redis
 
         except Exception as e:
