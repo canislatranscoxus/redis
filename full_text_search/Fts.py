@@ -27,6 +27,7 @@ import os
 
 import redis
 import redis.commands.search
+'''
 import redis.commands.search.aggregation as aggregations
 import redis.commands.search.reducers as reducers
 from redis import Redis
@@ -37,6 +38,7 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import GeoFilter, NumericFilter, Query
 from redis.commands.search.result import Result
 from redis.commands.search.suggestion import Suggestion
+'''
 
 class Fts():
 
