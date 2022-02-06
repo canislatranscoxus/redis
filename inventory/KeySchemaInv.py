@@ -1,4 +1,4 @@
-DEFAULT_KEY_PREFIX = 'inv'
+DEFAULT_KEY_PREFIX = 'inventory'
 
 def prefixed_key(f):
     """
@@ -25,7 +25,7 @@ class KeySchemaInv:
 
     @prefixed_key
     def get_inventory_key(self, cocedis_id, product_id ):
-        key = f'dp:{cocedis_id}:product:{product_id}'
+        key = f'{cocedis_id}:{product_id}'
         return key      
 
 
@@ -34,7 +34,7 @@ class KeySchemaInv:
         
         key = ''
         if cocedis_id != None:
-            key = f'dp:{cocedis_id}:'
+            key = f'{cocedis_id}:'
 
         return key        
 

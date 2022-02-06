@@ -5,7 +5,7 @@ description: Inventory Strategy 3. One hash per Cocedis and product.
 
 
             This script connect to  Redis and set the inventaory of All cocedis.
-             We specify the amount of total, available, reserved, allocated values per each product.
+             We specify the amount of onhand, available, reserved, allocated values per each product.
 
 
 To delete this keys in redis use the command below 
@@ -148,7 +148,7 @@ class InvDaoRedis:
 
                 key = self.keySchemaInv.get_inventory_key( d[ 'cocedis_id' ], d[ 'product_id' ] )
                 pipeline.hincrby( key, 'reserved', - d[ 'quantity' ] )
-                pipeline.hincrby( key, 'total'   , - d[ 'quantity' ] )
+                pipeline.hincrby( key, 'onhand'   , - d[ 'quantity' ] )
             
             pipeline.execute()
 
@@ -186,13 +186,13 @@ class InvDaoRedis:
 
         try:
             mapping = {
-                'total'      : 5,
+                'onhand'     : 5,
                 'available'  : 3,
                 'reserved'   : 1,
                 'allocated'  : 1,
                 }
 
-            #s = '''HSET inv:dp:{cocedis_id}:product:{product_id} total {total} available {available} reserved {reserved} allocated {allocated}'''
+            #s = '''HSET inv:dp:{cocedis_id}:product:{product_id} onhand {onhand} available {available} reserved {reserved} allocated {allocated}'''
 
             for product_id in range( 1, num_of_products + 1 ):
                 key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )            

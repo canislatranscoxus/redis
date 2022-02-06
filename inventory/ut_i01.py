@@ -150,8 +150,8 @@ if __name__ == '__main__':
     print( '\n Begin Unit Test.' )
     ut = Ut_i01()
     
+    ut.t_03()
     ut.t_01()
-    ut.t_09()
 
     print( '\n End Unit Test.' )
 
