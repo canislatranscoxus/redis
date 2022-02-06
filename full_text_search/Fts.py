@@ -75,7 +75,7 @@ class Fts():
 
             if result != None and result.total > 0:
                 for i in result.docs:
-                    print( i )
+                    print( i, '\n' )
 
             print( 'search done ...' )
 
