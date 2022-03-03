@@ -181,16 +181,17 @@ class InvDaoRedis:
             raise
 
 
-    def mock_data_cocedis( self, pipeline, cocedis_id = 1 ):
+    def mock_data_cocedis( self, pipeline, cocedis_id = 1, mapping = None ):
         '''Initialize the inventory with mocked data, dummy data.'''
 
         try:
-            mapping = {
-                'onhand'     : 5,
-                'available'  : 3,
-                'reserved'   : 1,
-                'allocated'  : 1,
-                }
+            if mapping == None:
+                mapping = {
+                    'onhand'     : 5,
+                    'available'  : 3,
+                    'reserved'   : 1,
+                    'allocated'  : 1,
+                    }
 
             #s = '''HSET inv:dp:{cocedis_id}:product:{product_id} onhand {onhand} available {available} reserved {reserved} allocated {allocated}'''
 
@@ -212,9 +213,17 @@ class InvDaoRedis:
 
             for cocedis_id in range( 1, num_of_cocedis + 1 ):
                 self.mock_data_cocedis( pipeline, cocedis_id )
-
-                #execute batch
                 pipeline.execute()
+            
+            # add data for a different warehouse
+            mapping = {
+                'onhand'     : 50,
+                'available'  : 50,
+                'reserved'   : 0,
+                'allocated'  : 0,
+                }
+            self.mock_data_cocedis( pipeline, 7, mapping )
+            pipeline.execute()
 
         except Exception as e:
             print( 'InvDaoBase.mock_data(), error: {}'.format( e ) )
