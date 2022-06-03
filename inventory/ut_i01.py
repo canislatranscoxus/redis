@@ -8,9 +8,9 @@ class Ut_i01:
 
         keys inv:*
         '''
-
         inv_Redis = InvDaoRedis()
-        inv_Redis.mock_data()
+        #inv_Redis.mock_data()
+        inv_Redis.mock_data_8()        
 
     def t_02( self ):
         ''' delete the inventory of cocedis_id 1
@@ -23,9 +23,10 @@ class Ut_i01:
         keys inv:dp:1:*        
         '''
 
-        cocedis_id = 1
+        
         inv_Redis  = InvDaoRedis()
-        inv_Redis.del_inventory( cocedis_id )
+        for cocedis_id in range( 8 ):
+            inv_Redis.del_inventory( cocedis_id )
 
     def t_03( self ):
         ''' delete the inventory of all the cocedis
@@ -150,8 +151,9 @@ if __name__ == '__main__':
     print( '\n Begin Unit Test.' )
     ut = Ut_i01()
     
-    ut.t_03()
+    #ut.t_03()
     ut.t_01()
+    ut.t_02()
 
     print( '\n End Unit Test.' )
 

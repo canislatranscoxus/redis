@@ -23,7 +23,7 @@ from KeySchemaInv import KeySchemaInv
 
 
 num_of_cocedis  = 6
-num_of_products = 31
+num_of_products = 32
 
 class InvDaoRedis:
 
@@ -187,9 +187,9 @@ class InvDaoRedis:
         try:
             if mapping == None:
                 mapping = {
-                    'onhand'     : 5,
-                    'available'  : 3,
-                    'reserved'   : 1,
+                    'onhand'     : 50,
+                    'available'  : 49,
+                    'reserved'   : 49,
                     'allocated'  : 1,
                     }
 
@@ -204,7 +204,7 @@ class InvDaoRedis:
             raise
 
     def mock_data( self ):
-        '''Insert mocked data, dummy data for 6 cocedis'''
+        '''Insert mocked data, dummy data for 6 cocedis, rfom 1 to 6.'''
         cocedis_id = 1
 
         try:
@@ -215,6 +215,22 @@ class InvDaoRedis:
                 self.mock_data_cocedis( pipeline, cocedis_id )
                 pipeline.execute()
             
+            pipeline.execute()
+
+        except Exception as e:
+            print( 'InvDaoBase.mock_data(), error: {}'.format( e ) )
+            raise
+
+
+    def mock_data_8( self ):
+        '''Insert mocked data, for warehouse 8'''
+        cocedis_id = 1
+
+        try:
+            # create pipe
+            pipeline = self.create_pipeline()
+
+          
             # add data for a different warehouse
             mapping = {
                 'onhand'     : 50,
@@ -222,12 +238,14 @@ class InvDaoRedis:
                 'reserved'   : 0,
                 'allocated'  : 0,
                 }
-            self.mock_data_cocedis( pipeline, 7, mapping )
+            self.mock_data_cocedis( pipeline, 8, mapping )
             pipeline.execute()
 
         except Exception as e:
             print( 'InvDaoBase.mock_data(), error: {}'.format( e ) )
             raise
+
+
 
     def __init__(self, params=None ) -> None:
         self.lua_dir      = '/home/art/git/redis/inventory/lua'
