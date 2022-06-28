@@ -15,6 +15,7 @@ del inv_cocedis:1 inv_cocedis:2 inv_cocedis:3 inv_cocedis:4 inv_cocedis:5 inv_co
 '''
 
 
+import json
 import os
 from typing import Mapping
 import redis
@@ -245,6 +246,58 @@ class InvDaoRedis:
             print( 'InvDaoBase.mock_data(), error: {}'.format( e ) )
             raise
 
+    def mock_data_x( self, cocedis_id, product_id ):
+        try:
+            pipeline = self.create_pipeline()
+          
+            mapping = {
+                'onhand'     : 150,
+                'available'  : 140,
+                'reserved'   :  10,
+                'allocated'  :   0,
+                }
+
+            key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )            
+            pipeline.hmset( key, mapping )
+            pipeline.execute()
+
+        except Exception as e:
+            print( 'InvDaoBase.mock_data_x(), error: {}'.format( e ) )
+            raise
+
+
+    def pass_dic( self ):
+        # this method pass a dictionary to lua.
+        try:
+            key    = 'animals'
+            d = {
+                'shark'     : 1,
+                'turttles'  : 4,
+                'octopus'   : 8,
+            }
+            j = json.dumps( d )
+            result = self.pass_dic_lua( keys = [key], args = [ self.REDIS_DB, j ] )
+
+        except Exception as e:
+            print( 'InvDaoBase.pass_dic(), error: {}'.format( e ) )
+            raise
+
+    def update_inv_out( self, supplier_id, id_qty ):
+        # this method pass a dictionary to lua.
+        try:
+
+            j       = json.dumps( id_qty )
+            result  = self.update_inv_out_lua( args = [ 
+                self.REDIS_DB, 
+                supplier_id,
+                j 
+                ] )
+
+            print( result )
+
+        except Exception as e:
+            print( 'InvDaoBase.update_inv_out(), error: {}'.format( e ) )
+            raise
 
 
     def __init__(self, params=None ) -> None:
@@ -261,6 +314,9 @@ class InvDaoRedis:
         #self.commit_cart_sale_lua = self.register_lua_script( 'commit_cart_sale.lua' )
         self.add_available_lua    = self.register_lua_script( 'add_available.lua'    )
         self.update_available_lua = self.register_lua_script( 'update_available.lua' )
+
+        self.pass_dic_lua         = self.register_lua_script( 'pass_dic.lua'    )
+        self.update_inv_out_lua   = self.register_lua_script( 'update_inv_out.lua' )
 
 
 

@@ -145,6 +145,24 @@ class Ut_i01:
         ]
         inv_Redis.commit_cart_sale( cart_items )
 
+    def t_10( self ):
+        inv_Redis = InvDaoRedis()
+        inv_Redis.pass_dic()
+
+    def t_11( self ):
+        inv_Redis = InvDaoRedis()
+
+        supplier_id = 'x'
+        id_qty      = {
+            '1'  : 2,
+            '2'  : 3,
+        }
+        inv_Redis.mock_data_x( supplier_id, 1 )
+        inv_Redis.mock_data_x( supplier_id, 2 )
+
+        inv_Redis.update_inv_out( supplier_id, id_qty )
+        print( 'ut 11 ok' )
+
 
 
 if __name__ == '__main__':
@@ -152,8 +170,10 @@ if __name__ == '__main__':
     ut = Ut_i01()
     
     #ut.t_03()
-    ut.t_01()
-    ut.t_02()
+    #ut.t_01()
+    #ut.t_02()
+
+    ut.t_11()
 
     print( '\n End Unit Test.' )
 
