@@ -29,6 +29,10 @@ r.hset( 'animals', mapping= mapping )
 result = r.hgetall( 'animals' )
 print( result )
 
+# insert or update just one attribute in a hash
+r.hset( 'animals', 'fish', 'Baby Shark'  )
+
+
 print( 'delete turtle' )
 r.hdel( 'animals', 'turtle' )
 

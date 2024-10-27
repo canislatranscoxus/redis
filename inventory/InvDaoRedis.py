@@ -45,10 +45,11 @@ class InvDaoRedis:
 
     def connect( self ):
         try:
-            self.REDIS_HOST = os.environ[ 'REDIS_HOST' ]
+            '''self.REDIS_HOST = os.environ[ 'REDIS_HOST' ]
             self.REDIS_PORT = os.environ[ 'REDIS_PORT' ]
             self.REDIS_DB   = os.environ[ 'REDIS_DB'   ]
-            self.REDIS_AUTH = os.environ[ 'REDIS_AUTH' ]
+            self.REDIS_AUTH = os.environ[ 'REDIS_AUTH' ]'''
+
 
             self.conn = redis.StrictRedis( 
                  host             = self.REDIS_HOST
@@ -251,10 +252,10 @@ class InvDaoRedis:
             pipeline = self.create_pipeline()
           
             mapping = {
-                'onhand'     : 150,
-                'available'  : 140,
-                'reserved'   :  10,
-                'allocated'  :   0,
+                'onhand'     :  0,
+                'available'  :  0,
+                'reserved'   :  0,
+                'allocated'  :  0,
                 }
 
             key = self.keySchemaInv.get_inventory_key( cocedis_id, product_id )            

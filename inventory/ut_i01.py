@@ -152,16 +152,28 @@ class Ut_i01:
     def t_11( self ):
         inv_Redis = InvDaoRedis()
 
-        supplier_id = 'x'
+        cocedis_id = 8
         id_qty      = {
             '1'  : 2,
             '2'  : 3,
         }
-        inv_Redis.mock_data_x( supplier_id, 1 )
-        inv_Redis.mock_data_x( supplier_id, 2 )
+        inv_Redis.mock_data_x( cocedis_id, 1 )
+        inv_Redis.mock_data_x( cocedis_id, 2 )
 
-        inv_Redis.update_inv_out( supplier_id, id_qty )
+        inv_Redis.update_inv_out( cocedis_id, id_qty )
         print( 'ut 11 ok' )
+
+    def t_12( self ):
+        # set initial inventory.
+
+        inv_Redis = InvDaoRedis()
+
+        cocedis_id = 8
+        inv_Redis.mock_data_x( cocedis_id, 1 )
+        inv_Redis.mock_data_x( cocedis_id, 2 )
+        inv_Redis.mock_data_x( cocedis_id, 3 )
+
+        print( 'ut 12 ok' )
 
 
 
@@ -173,7 +185,7 @@ if __name__ == '__main__':
     #ut.t_01()
     #ut.t_02()
 
-    ut.t_11()
+    ut.t_12()
 
     print( '\n End Unit Test.' )
 
